@@ -7,10 +7,20 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Krivosheev Andrey");
 MODULE_VERSION("0.1");
 
+struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child_dentry, unsigned int flag) {
+    return NULL;
+}
+
+struct inode_operations networkfs_inode_ops =
+        {
+                .lookup = networkfs_lookup,
+        };
+
 struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *dir, umode_t mode, int i_ino) {
     struct inode *inode;
     inode = new_inode(sb);
     inode->i_ino = i_ino;
+    inode->i_op = &networkfs_inode_ops;
     if (inode != NULL) {
         inode_init_owner(&init_user_ns, inode, dir, mode);
     }
