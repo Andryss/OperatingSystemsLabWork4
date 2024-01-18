@@ -12,7 +12,7 @@ struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *di
     inode = new_inode(sb);
     inode->i_ino = i_ino;
     if (inode != NULL) {
-        inode_init_owner(inode, dir, mode);
+        inode_init_owner(&init_user_ns, inode, dir, mode);
     }
     return inode;
 }
