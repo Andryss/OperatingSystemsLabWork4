@@ -73,7 +73,7 @@ int networkfs_init(void) {
 
 void networkfs_exit(void) {
     printk(KERN_INFO "Exit module start\n");
-    if (register_filesystem(&networkfs_fs_type) != 0) {
+    if (unregister_filesystem(&networkfs_fs_type) != 0) {
         printk(KERN_ERR "Exit module error\n");
         return;
     }
