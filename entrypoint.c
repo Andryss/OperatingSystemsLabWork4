@@ -29,7 +29,7 @@ struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *di
 
 int networkfs_fill_super(struct super_block *sb, void *data, int silent) {
     struct inode *inode;
-    inode = networkfs_get_inode(sb, NULL, S_IFDIR, 1000);
+    inode = networkfs_get_inode(sb, NULL, S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO, 1000);
     sb->s_root = d_make_root(inode);
     if (sb->s_root == NULL) {
         return -ENOMEM;
