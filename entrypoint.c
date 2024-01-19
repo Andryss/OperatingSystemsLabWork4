@@ -5,6 +5,14 @@ MODULE_AUTHOR("Krivosheev Andrey");
 MODULE_VERSION("0.1");
 
 struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child_dentry, unsigned int flag) {
+    ino_t root;
+    struct inode *inode;
+    const char *name = child_dentry->d_name.name;
+    root = parent_inode->i_ino;
+    if (root == 100 && !strcmp(name, "test.txt")) {
+        inode = networkfs_get_inode(parent_inode->i_sb, NULL, S_IFREG, 101);
+        d_add(child_dentry, inode);
+    }
     return NULL;
 }
 
@@ -49,7 +57,7 @@ struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *di
 
 int networkfs_fill_super(struct super_block *sb, void *data, int silent) {
     struct inode *inode;
-    inode = networkfs_get_inode(sb, NULL, S_IFDIR, 1000);
+    inode = networkfs_get_inode(sb, NULL, S_IFDIR, 100);
     sb->s_root = d_make_root(inode);
     if (sb->s_root == NULL) {
         return -ENOMEM;
