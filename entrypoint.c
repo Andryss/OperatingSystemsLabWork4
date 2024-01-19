@@ -1,7 +1,4 @@
-#include <linux/fs.h>
-#include <linux/init.h>
-#include <linux/module.h>
-#include <linux/kernel.h>
+#include "entrypoint.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Krivosheev Andrey");
@@ -11,16 +8,39 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     return NULL;
 }
 
-struct inode_operations networkfs_inode_ops =
-        {
-                .lookup = networkfs_lookup,
-        };
+int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
+    char fsname[10];
+    struct dentry *dentry;
+    struct inode *inode;
+    unsigned long offset;
+    int stored;
+    unsigned char ftype;
+    ino_t ino;
+    ino_t dino;
+    dentry = filp->f_path.dentry;
+    inode = dentry->d_inode;
+    offset = filp->f_pos;
+    stored = 0;
+    ino = inode->i_ino;
+
+
+    dir_emit(ctx, ".", 1, ino, DT_DIR);
+    ctx->pos += 1;
+    dir_emit(ctx, "..", 2, dentry->d_parent->d_inode->i_ino, DT_DIR);
+    ctx->pos += 1;
+    dir_emit(ctx, "test.txt", 8, 101, DT_REG);
+    ctx->pos += 1;
+
+    return 0;
+}
 
 struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *dir, umode_t mode, int i_ino) {
     struct inode *inode;
     inode = new_inode(sb);
     inode->i_ino = i_ino;
     inode->i_op = &networkfs_inode_ops;
+    inode->i_fop = &networkfs_dir_ops;
+    mode |= S_IRWXU | S_IRWXG | S_IRWXO;
     if (inode != NULL) {
         inode_init_owner(&init_user_ns, inode, dir, mode);
     }
@@ -29,12 +49,12 @@ struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *di
 
 int networkfs_fill_super(struct super_block *sb, void *data, int silent) {
     struct inode *inode;
-    inode = networkfs_get_inode(sb, NULL, S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO, 1000);
+    inode = networkfs_get_inode(sb, NULL, S_IFDIR, 1000);
     sb->s_root = d_make_root(inode);
     if (sb->s_root == NULL) {
         return -ENOMEM;
     }
-    printk(KERN_INFO "return 0\n");
+    printk(KERN_INFO "networkfs_fill_super\n");
     return 0;
 }
 
@@ -53,13 +73,6 @@ struct dentry* networkfs_mount(struct file_system_type *fs_type, int flags, cons
 void networkfs_kill_sb(struct super_block *sb) {
     printk(KERN_INFO "networkfs super block is destroyed. Unmount successfully.\n");
 }
-
-struct file_system_type networkfs_fs_type =
-        {
-                .name = "networkfs",
-                .mount = networkfs_mount,
-                .kill_sb = networkfs_kill_sb
-        };
 
 int networkfs_init(void) {
     printk(KERN_INFO "Init module start\n");
