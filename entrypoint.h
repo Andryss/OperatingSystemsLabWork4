@@ -43,23 +43,18 @@ struct inode_operations networkfs_inode_ops =
 
 
 // http
-#pragma pack(push)  /* push current alignment to stack */
-#pragma pack(1)     /* set alignment to 1 byte boundary */
-
-struct __attribute__((__packed__)) list_response  {
+struct list_response {
     uint32_t count;
-    struct __attribute__((__packed__)) entry {
+    struct entry {
         char name[64];
         uint32_t ino;
         uint8_t type;
-    } entries[8];
-};
+    } entries[8] __attribute__((__packed__));
+} __attribute__((__packed__));
 
-struct __attribute__((__packed__)) lookup_response {
+struct lookup_response {
     uint32_t ino;
     uint8_t type;
-};
-
-#pragma pack(pop)   /* restore original alignment from stack */
+} __attribute__((__packed__));
 
 #endif //NETWORK_FILE_SYSTEM_ENTRYPOINT_H
