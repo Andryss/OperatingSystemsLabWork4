@@ -123,8 +123,8 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
-    if (networkfs_http_call(token, "lookup", (void *) &response, sizeof(response),
-                            2, "parent", inode_str, "name", name) != 0) {
+    if ((code = networkfs_http_call(token, "lookup", (void *) &response, sizeof(response),
+                            2, "parent", inode_str, "name", name)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return (void *) -1;
     }
