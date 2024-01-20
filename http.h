@@ -1,7 +1,6 @@
 #ifndef NETWORK_FILE_SYSTEM_HTTP_H
 #define NETWORK_FILE_SYSTEM_HTTP_H
 
-#include <linux/types.h>
 #include <linux/inet.h>
 
 int64_t networkfs_http_call(const char *token, const char *method,

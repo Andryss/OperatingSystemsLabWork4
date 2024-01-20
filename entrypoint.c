@@ -122,10 +122,10 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
     if (networkfs_http_call(token, "lookup", (void *) &response, sizeof(response),
                             2, "parent", inode_str, "name", name) != 0) {
-        return -1;
+        return (void *) -1;
     }
 
-    printk(KERN_INFO "Found inode %lu with type %d\n", response.ino, (int) response.type);
+    printk(KERN_INFO "Found inode %du with type %d\n", response.ino, (int) response.type);
 
     umode_t type = (response.type == DT_REG ? S_IFREG : S_IFDIR);
     inode = networkfs_get_inode(parent_inode->i_sb, NULL, type, response.ino);

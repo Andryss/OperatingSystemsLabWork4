@@ -1,6 +1,6 @@
 obj-m += networkfs.o
-networkfs-objs += entrypoint.o
-ccflags-y := -std=gnu11
+networkfs-objs += entrypoint.o http.o
+ccflags-y := -std=gnu11 -Wno-declaration-after-statement
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(shell pwd) modules

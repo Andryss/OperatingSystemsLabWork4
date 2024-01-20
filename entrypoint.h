@@ -49,7 +49,7 @@ struct list_response {
         char name[64];
         uint32_t ino;
         uint8_t type;
-    } entries[16];
+    } entries[8];
 };
 
 struct lookup_response {
