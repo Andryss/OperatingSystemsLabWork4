@@ -47,25 +47,25 @@ struct inode_operations networkfs_inode_ops =
 
 
 // http
-struct list_response {
+struct __attribute__((__packed__)) list_response {
     uint32_t count;
-    struct entry {
+    struct __attribute__((__packed__)) entry {
         char name[64];
         uint32_t ino;
         uint8_t type;
-    } entries[8] __attribute__((__packed__));
-} __attribute__((__packed__));
+    } entries[8];
+};
 
-struct lookup_response {
+struct __attribute__((__packed__)) lookup_response {
     uint32_t ino;
     uint8_t type;
-} __attribute__((__packed__));
+};
 
-struct create_response {
+struct __attribute__((__packed__)) create_response {
     uint32_t ino;
-} __attribute__((__packed__));
+};
 
-struct unlink_response {
-} __attribute__((__packed__));
+struct __attribute__((__packed__)) unlink_response {
+};
 
 #endif //NETWORK_FILE_SYSTEM_ENTRYPOINT_H
