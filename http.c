@@ -84,7 +84,6 @@ int64_t parse_http_response(char *raw_response, size_t raw_response_size,
             return -6;
         }
         char *header = strsep(&buffer, "\r");
-        printk(KERN_INFO "Next line \"%s\"\n", header);
         ++header;  // skip \n
         if (strcmp(header, "") == 0) {
             // end of headers
