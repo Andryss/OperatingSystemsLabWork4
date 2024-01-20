@@ -81,7 +81,7 @@ int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
     struct list_response response;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", ino);
-    if (networkfs_http_call(token, "list", &response, sizeof(response),
+    if (networkfs_http_call(token, "list", (void *) &response, sizeof(response),
                             1, "inode", inode_str) != 0) {
         return -1;
     }
@@ -120,7 +120,7 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     struct lookup_response response;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
-    if (networkfs_http_call(token, "lookup", &response, sizeof(response),
+    if (networkfs_http_call(token, "lookup", (void *) &response, sizeof(response),
                             2, "parent", inode_str, "name", name) != 0) {
         return -1;
     }
