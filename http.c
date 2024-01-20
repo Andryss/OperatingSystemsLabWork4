@@ -1,6 +1,7 @@
 #include "http.h"
 
 const char *SERVER_IP = "192.168.0.104";
+const int SERVER_PORT = 8080;
 
 // callee should call free_request on received buffer
 int fill_request(struct kvec *vec, const char *token, const char *method,
@@ -139,7 +140,7 @@ int64_t networkfs_http_call(const char *token, const char *method,
 
     struct sockaddr_in s_addr = {.sin_family = AF_INET,
             .sin_addr = {.s_addr = in_aton(SERVER_IP)},
-            .sin_port = htons(8080)};
+            .sin_port = htons(SERVER_PORT)};
 
     error = kernel_connect(sock, (struct sockaddr *)&s_addr,
                            sizeof(struct sockaddr_in), 0);
