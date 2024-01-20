@@ -58,7 +58,7 @@ struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *di
     inode->i_ino = i_ino;
     inode->i_op = &networkfs_inode_ops;
     inode->i_fop = &networkfs_dir_ops;
-    mode |= S_IRWXU | S_IRWXG | S_IRWXO;
+    mode |= S_IRWXUGO;
     printk(KERN_INFO "Get inode of %d\n", i_ino);
     if (inode != NULL) {
         inode_init_owner(&init_user_ns, inode, dir, mode);
@@ -118,7 +118,7 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     const char *name = child_dentry->d_name.name;
     root = parent_inode->i_ino;
 
-    printk(KERN_INFO "Lookup in %d for %s\n", (int) root, name);
+    printk(KERN_INFO "Lookup in %lu for %s\n", root, name);
 
     struct lookup_response response;
     int64_t code;
@@ -136,6 +136,52 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     inode = networkfs_get_inode(parent_inode->i_sb, NULL, type, response.ino);
     d_add(child_dentry, inode);
     return NULL;
+}
+
+int networkfs_create(struct user_namespace *u_ns, struct inode *parent_inode, struct dentry *child_dentry, umode_t mode, bool b) {
+    ino_t root;
+    struct inode *inode;
+    const char *name = child_dentry->d_name.name;
+    root = parent_inode->i_ino;
+
+    printk(KERN_INFO "Create %s inside %lu\n", name, root);
+
+    struct create_response response;
+    int64_t code;
+    char inode_str[11];
+    snprintf(inode_str, 11, "%lu", root);
+    if ((code = networkfs_http_call(token, "create", (void *)&response, sizeof(response),
+                                    3, "parent", inode_str, "name", name, "type", DT_REG)) != 0) {
+        printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
+        return -1;
+    }
+
+    printk(KERN_INFO "Allocated new inode %du\n", response.ino);
+
+    inode = networkfs_get_inode(parent_inode->i_sb, NULL, S_IFREG, response.ino);
+    d_add(child_dentry, inode);
+    return 0;
+}
+
+int networkfs_unlink(struct inode *parent_inode, struct dentry *child_dentry) {
+    const char *name = child_dentry->d_name.name;
+    ino_t root;
+    root = parent_inode->i_ino;
+
+    printk(KERN_INFO "Unlink %s from %lu\n", name, root);
+
+    struct unlink_response response;
+    int64_t code;
+    char inode_str[11];
+    snprintf(inode_str, 11, "%lu", root);
+    if ((code = networkfs_http_call(token, "unlink", (void *)&response, sizeof(response),
+                                    2, "parent", inode_str, "name", name)) != 0) {
+        printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
+        return -1;
+    }
+
+    printk(KERN_INFO "Unlinked\n");
+    return 0;
 }
 
 module_init(networkfs_init);

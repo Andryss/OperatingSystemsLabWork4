@@ -35,10 +35,14 @@ struct file_operations networkfs_dir_ops =
 
 
 struct dentry* networkfs_lookup(struct inode *, struct dentry *, unsigned int);
+int networkfs_create(struct user_namespace *, struct inode *, struct dentry *, umode_t, bool);
+int networkfs_unlink(struct inode *, struct dentry *);
 
 struct inode_operations networkfs_inode_ops =
         {
                 .lookup = networkfs_lookup,
+                .create = networkfs_create,
+                .unlink = networkfs_unlink
         };
 
 
@@ -55,6 +59,13 @@ struct list_response {
 struct lookup_response {
     uint32_t ino;
     uint8_t type;
+} __attribute__((__packed__));
+
+struct create_response {
+    uint32_t ino;
+} __attribute__((__packed__));
+
+struct unlink_response {
 } __attribute__((__packed__));
 
 #endif //NETWORK_FILE_SYSTEM_ENTRYPOINT_H
