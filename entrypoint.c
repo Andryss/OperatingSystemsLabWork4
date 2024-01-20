@@ -151,7 +151,7 @@ int networkfs_create(struct user_namespace *u_ns, struct inode *parent_inode, st
     char inode_str[11];
     snprintf(inode_str, 11, "%lu", root);
     if ((code = networkfs_http_call(token, "create", (void *)&response, sizeof(response),
-                                    3, "parent", inode_str, "name", name, "type", DT_REG)) != 0) {
+                                    3, "parent", inode_str, "name", name)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }
