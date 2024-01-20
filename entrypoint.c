@@ -158,8 +158,10 @@ static int networkfs_create_object(struct inode *parent_inode, struct dentry *ch
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
+    char type_str[2];
+    snprintf(type_str, sizeof(type_str), "%d", (int) type);
     if ((code = networkfs_http_call(token, "create", (void *)&response, sizeof(response),
-                                    3, "parent", inode_str, "name", name, "type", type)) != 0) {
+                                    3, "parent", inode_str, "name", name, "type", type_str)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }
