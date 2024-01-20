@@ -79,10 +79,12 @@ int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
     printk(KERN_INFO "Iterate through %lu offset %lu\n", ino, offset);
 
     struct list_response response;
+    int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", ino);
-    if (networkfs_http_call(token, "list", (void *) &response, sizeof(response),
-                            1, "inode", inode_str) != 0) {
+    if ((code = networkfs_http_call(token, "list", (void *) &response, sizeof(response),
+                            1, "inode", inode_str)) != 0) {
+        printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }
 
@@ -118,10 +120,12 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     printk(KERN_INFO "Lookup in %d for %s\n", (int) root, name);
 
     struct lookup_response response;
+    int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
     if (networkfs_http_call(token, "lookup", (void *) &response, sizeof(response),
                             2, "parent", inode_str, "name", name) != 0) {
+        printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return (void *) -1;
     }
 
