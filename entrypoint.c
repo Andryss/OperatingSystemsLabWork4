@@ -9,6 +9,7 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     struct inode *inode;
     const char *name = child_dentry->d_name.name;
     root = parent_inode->i_ino;
+    printk(KERN_INFO "Lookup in %d for %s\n", (int) root, name);
     if (root == 100 && !strcmp(name, "test.txt")) {
         inode = networkfs_get_inode(parent_inode->i_sb, NULL, S_IFREG, 101);
         d_add(child_dentry, inode);
@@ -31,6 +32,7 @@ int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
     stored = 0;
     ino = inode->i_ino;
 
+    printk(KERN_INFO "Iterate through %d\n", (int) ino);
 
     dir_emit(ctx, ".", 1, ino, DT_DIR);
     ctx->pos += 1;
@@ -49,6 +51,7 @@ struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *di
     inode->i_op = &networkfs_inode_ops;
     inode->i_fop = &networkfs_dir_ops;
     mode |= S_IRWXU | S_IRWXG | S_IRWXO;
+    printk(KERN_INFO "Get inode of %d\n", i_ino);
     if (inode != NULL) {
         inode_init_owner(&init_user_ns, inode, dir, mode);
     }
@@ -62,7 +65,7 @@ int networkfs_fill_super(struct super_block *sb, void *data, int silent) {
     if (sb->s_root == NULL) {
         return -ENOMEM;
     }
-    printk(KERN_INFO "networkfs_fill_super\n");
+    printk(KERN_INFO "Root initialized\n");
     return 0;
 }
 
@@ -71,8 +74,7 @@ struct dentry* networkfs_mount(struct file_system_type *fs_type, int flags, cons
     ret = mount_nodev(fs_type, flags, data, networkfs_fill_super);
     if (ret == NULL) {
         printk(KERN_ERR "Can't mount file system");
-    }
-    else {
+    } else {
         printk(KERN_INFO "Mounted successfuly");
     }
     return ret;
