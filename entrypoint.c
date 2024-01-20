@@ -18,30 +18,32 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
 }
 
 int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
-    char fsname[10];
     struct dentry *dentry;
     struct inode *inode;
     unsigned long offset;
-    int stored;
-    unsigned char ftype;
     ino_t ino;
-    ino_t dino;
     dentry = filp->f_path.dentry;
     inode = dentry->d_inode;
     offset = filp->f_pos;
-    stored = 0;
     ino = inode->i_ino;
 
-    printk(KERN_INFO "Iterate through %d\n", (int) ino);
+    printk(KERN_INFO "Iterate through %d offset %lu\n", (int) ino, offset);
+
+    if (offset >= 3) {
+        return 0;
+    }
 
     dir_emit(ctx, ".", 1, ino, DT_DIR);
+    printk(KERN_INFO "Dir emit \".\" pos %lld\n", ctx->pos);
     ctx->pos += 1;
     dir_emit(ctx, "..", 2, dentry->d_parent->d_inode->i_ino, DT_DIR);
+    printk(KERN_INFO "Dir emit \"..\" pos %lld\n", ctx->pos);
     ctx->pos += 1;
     dir_emit(ctx, "test.txt", 8, 101, DT_REG);
+    printk(KERN_INFO "Dir emit \"test.txt\" pos %lld\n", ctx->pos);
     ctx->pos += 1;
 
-    return 0;
+    return 1;
 }
 
 struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *dir, umode_t mode, int i_ino) {
