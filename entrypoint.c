@@ -138,50 +138,83 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     return NULL;
 }
 
-int networkfs_create(struct user_namespace *u_ns, struct inode *parent_inode, struct dentry *child_dentry, umode_t mode, bool b) {
+static int networkfs_create_object(struct inode *parent_inode, struct dentry *child_dentry, char type) {
     ino_t root;
     struct inode *inode;
     const char *name = child_dentry->d_name.name;
     root = parent_inode->i_ino;
 
-    printk(KERN_INFO "Create %s inside %lu\n", name, root);
+    if (type != DT_REG && type != DT_DIR) {
+        return -1;
+    }
+
+    if (type == DT_REG) {
+        printk(KERN_INFO "Create file %s inside %lu\n", name, root);
+    } else {
+        printk(KERN_INFO "Create dir %s inside %lu\n", name, root);
+    }
 
     struct create_response response;
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
     if ((code = networkfs_http_call(token, "create", (void *)&response, sizeof(response),
-                                    2, "parent", inode_str, "name", name)) != 0) {
+                                    3, "parent", inode_str, "name", name, "type", type)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }
 
     printk(KERN_INFO "Allocated new inode %du\n", response.ino);
 
-    inode = networkfs_get_inode(parent_inode->i_sb, NULL, S_IFREG, response.ino);
+    umode_t mode = (type == DT_REG ? S_IFREG : S_IFDIR);
+    inode = networkfs_get_inode(parent_inode->i_sb, NULL, mode, response.ino);
     d_add(child_dentry, inode);
     return 0;
 }
 
-int networkfs_unlink(struct inode *parent_inode, struct dentry *child_dentry) {
+int networkfs_create(struct user_namespace *u_ns, struct inode *parent_inode, struct dentry *child_dentry, umode_t mode, bool b) {
+    return networkfs_create_object(parent_inode, child_dentry, DT_REG);
+}
+
+int networkgs_mkdir(struct user_namespace *u_ns, struct inode *parent_inode, struct dentry *child_dentry, umode_t mode) {
+    return networkfs_create_object(parent_inode, child_dentry, DT_DIR);
+}
+
+static int networkfs_remove_object(struct inode *parent_inode, struct dentry *child_dentry, char type) {
     const char *name = child_dentry->d_name.name;
     ino_t root;
     root = parent_inode->i_ino;
 
-    printk(KERN_INFO "Unlink %s from %lu\n", name, root);
+    if (type != DT_REG && type != DT_DIR) {
+        return -1;
+    }
 
-    struct unlink_response response;
+    if (type == DT_REG) {
+        printk(KERN_INFO "Remove file %s from %lu\n", name, root);
+    } else {
+        printk(KERN_INFO "Remove dir %s from %lu\n", name, root);
+    }
+
+    struct remove_response response;
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
-    if ((code = networkfs_http_call(token, "unlink", (void *)&response, sizeof(response),
+    if ((code = networkfs_http_call(token, "remove", (void *)&response, sizeof(response),
                                     2, "parent", inode_str, "name", name)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }
 
-    printk(KERN_INFO "Unlinked\n");
+    printk(KERN_INFO "Removed\n");
     return 0;
+}
+
+int networkfs_unlink(struct inode *parent_inode, struct dentry *child_dentry) {
+    return networkfs_remove_object(parent_inode, child_dentry, DT_REG);
+}
+
+int networkgs_rmdir(struct inode *parent_inode, struct dentry *child_dentry) {
+    return networkfs_remove_object(parent_inode, child_dentry, DT_DIR);
 }
 
 module_init(networkfs_init);

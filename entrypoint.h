@@ -30,19 +30,23 @@ int networkfs_iterate(struct file *, struct dir_context *);
 
 struct file_operations networkfs_dir_ops =
         {
-                .iterate = networkfs_iterate,
+                .iterate = networkfs_iterate
         };
 
 
 struct dentry* networkfs_lookup(struct inode *, struct dentry *, unsigned int);
 int networkfs_create(struct user_namespace *, struct inode *, struct dentry *, umode_t, bool);
 int networkfs_unlink(struct inode *, struct dentry *);
+int networkgs_mkdir(struct user_namespace *, struct inode *, struct dentry *, umode_t);
+int networkgs_rmdir(struct inode *,struct dentry *);
 
 struct inode_operations networkfs_inode_ops =
         {
                 .lookup = networkfs_lookup,
                 .create = networkfs_create,
-                .unlink = networkfs_unlink
+                .unlink = networkfs_unlink,
+                .mkdir = networkgs_mkdir,
+                .rmdir = networkgs_rmdir
         };
 
 
@@ -65,7 +69,7 @@ struct __attribute__((__packed__)) create_response {
     uint32_t ino;
 };
 
-struct __attribute__((__packed__)) unlink_response {
+struct __attribute__((__packed__)) remove_response {
 };
 
 #endif //NETWORK_FILE_SYSTEM_ENTRYPOINT_H
