@@ -101,8 +101,9 @@ int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
 
     printk(KERN_INFO "Found %d entries\n", response.count);
 
-    for (int16_t i = 0; i < response.count; i++) {
-        char *name = response.entries[i].name;
+    char *name;
+    for (int32_t i = 0; i < response.count; i++) {
+        name = response.entries[i].name;
         dir_emit(ctx, name, strlen(name), (ino_t) response.entries[i].ino, response.entries[i].type);
         printk(KERN_INFO "Dir emit \"%s\" pos %lld\n", name, ctx->pos);
         ctx->pos += 1;

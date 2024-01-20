@@ -65,7 +65,6 @@ int64_t parse_http_response(char *raw_response, size_t raw_response_size,
     // Read Response Line
     {
         char *status_line = strsep(&buffer, "\r");
-        printk(KERN_INFO "Next line \"%s\"\n", status_line);
         strsep(&status_line, " ");
         if (status_line == 0) {
             return -6;
