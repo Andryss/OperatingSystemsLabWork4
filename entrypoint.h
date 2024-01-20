@@ -6,6 +6,8 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 
+#include "http.h"
+
 
 int networkfs_init(void);
 void networkfs_exit(void);
@@ -38,5 +40,21 @@ struct inode_operations networkfs_inode_ops =
         {
                 .lookup = networkfs_lookup,
         };
+
+
+// http
+struct list_response {
+    uint32_t count;
+    struct entry {
+        char name[64];
+        uint32_t ino;
+        uint8_t type;
+    } entries[16];
+};
+
+struct lookup_response {
+    uint32_t ino;
+    uint8_t type;
+};
 
 #endif //NETWORK_FILE_SYSTEM_ENTRYPOINT_H

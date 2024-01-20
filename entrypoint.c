@@ -4,16 +4,29 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Krivosheev Andrey");
 MODULE_VERSION("0.1");
 
+char token[32];
+
 struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child_dentry, unsigned int flag) {
     ino_t root;
     struct inode *inode;
     const char *name = child_dentry->d_name.name;
     root = parent_inode->i_ino;
+
     printk(KERN_INFO "Lookup in %d for %s\n", (int) root, name);
-    if (root == 100 && !strcmp(name, "test.txt")) {
-        inode = networkfs_get_inode(parent_inode->i_sb, NULL, S_IFREG, 101);
-        d_add(child_dentry, inode);
+
+    struct lookup_response response;
+    char inode_str[11];
+    snprintf(inode_str, sizeof(inode_str), "%lu", root);
+    if (networkfs_http_call(token, "lookup", &response, sizeof(response),
+                            2, "parent", inode_str, "name", name) != 0) {
+        return -1;
     }
+
+    printk(KERN_INFO "Found inode %lu with type %d\n", response.ino, (int) response.type);
+
+    umode_t type = (response.type == DT_REG ? S_IFREG : S_IFDIR);
+    inode = networkfs_get_inode(parent_inode->i_sb, NULL, type, response.ino);
+    d_add(child_dentry, inode);
     return NULL;
 }
 
@@ -27,9 +40,17 @@ int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
     offset = filp->f_pos;
     ino = inode->i_ino;
 
-    printk(KERN_INFO "Iterate through %d offset %lu\n", (int) ino, offset);
+    printk(KERN_INFO "Iterate through %lu offset %lu\n", ino, offset);
 
-    if (offset >= 3) {
+    struct list_response response;
+    char inode_str[11];
+    snprintf(inode_str, sizeof(inode_str), "%lu", ino);
+    if (networkfs_http_call(token, "list", &response, sizeof(response),
+                            1, "inode", inode_str) != 0) {
+        return -1;
+    }
+
+    if (offset >= response.count + 2) {
         return 0;
     }
 
@@ -39,11 +60,17 @@ int networkfs_iterate(struct file *filp, struct dir_context *ctx) {
     dir_emit(ctx, "..", 2, dentry->d_parent->d_inode->i_ino, DT_DIR);
     printk(KERN_INFO "Dir emit \"..\" pos %lld\n", ctx->pos);
     ctx->pos += 1;
-    dir_emit(ctx, "test.txt", 8, 101, DT_REG);
-    printk(KERN_INFO "Dir emit \"test.txt\" pos %lld\n", ctx->pos);
-    ctx->pos += 1;
 
-    return 1;
+    printk(KERN_INFO "Found %d entries\n", response.count);
+
+    for (int16_t i = 0; i < response.count; i++) {
+        char *name = response.entries[i].name;
+        dir_emit(ctx, name, strlen(name), (ino_t) response.entries[i].ino, response.entries[i].type);
+        printk(KERN_INFO "Dir emit \"%s\" pos %lld\n", name, ctx->pos);
+        ctx->pos += 1;
+    }
+
+    return response.count;
 }
 
 struct inode *networkfs_get_inode(struct super_block *sb, const struct inode *dir, umode_t mode, int i_ino) {
@@ -71,8 +98,9 @@ int networkfs_fill_super(struct super_block *sb, void *data, int silent) {
     return 0;
 }
 
-struct dentry* networkfs_mount(struct file_system_type *fs_type, int flags, const char *token, void *data) {
+struct dentry* networkfs_mount(struct file_system_type *fs_type, int flags, const char *t, void *data) {
     struct dentry *ret;
+    strcpy(token, t);
     ret = mount_nodev(fs_type, flags, data, networkfs_fill_super);
     if (ret == NULL) {
         printk(KERN_ERR "Can't mount file system");
