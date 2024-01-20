@@ -4,7 +4,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Krivosheev Andrey");
 MODULE_VERSION("0.1");
 
-char token[32];
+char token[36];
 
 int networkfs_init(void) {
     printk(KERN_INFO "Init module start\n");
