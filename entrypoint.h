@@ -54,7 +54,7 @@ struct inode_operations networkfs_inode_ops =
 struct __attribute__((__packed__)) list_response {
     uint32_t count;
     struct __attribute__((__packed__)) entry {
-        char name[64];
+        char name[256];
         uint32_t ino;
         uint8_t type;
     } entries[8];

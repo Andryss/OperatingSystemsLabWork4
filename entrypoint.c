@@ -124,8 +124,10 @@ struct dentry* networkfs_lookup(struct inode *parent_inode, struct dentry *child
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
+    char name_enc[255 * 3 + 1];
+    encode(name, name_enc);
     if ((code = networkfs_http_call(token, "lookup", (void *) &response, sizeof(response),
-                            2, "parent", inode_str, "name", name)) != 0) {
+                            2, "parent", inode_str, "name", name_enc)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return NULL;
     }
@@ -158,10 +160,12 @@ static int networkfs_create_object(struct inode *parent_inode, struct dentry *ch
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
+    char name_enc[255 * 3 + 1];
+    encode(name, name_enc);
     char type_str[2];
     snprintf(type_str, sizeof(type_str), "%d", (int) type);
     if ((code = networkfs_http_call(token, "create", (void *)&response, sizeof(response),
-                                    3, "parent", inode_str, "name", name, "type", type_str)) != 0) {
+                                    3, "parent", inode_str, "name", name_enc, "type", type_str)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }
@@ -201,8 +205,10 @@ static int networkfs_remove_object(struct inode *parent_inode, struct dentry *ch
     int64_t code;
     char inode_str[11];
     snprintf(inode_str, sizeof(inode_str), "%lu", root);
+    char name_enc[255 * 3 + 1];
+    encode(name, name_enc);
     if ((code = networkfs_http_call(token, "remove", (void *)&response, sizeof(response),
-                                    2, "parent", inode_str, "name", name)) != 0) {
+                                    2, "parent", inode_str, "name", name_enc)) != 0) {
         printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
         return -1;
     }

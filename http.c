@@ -197,3 +197,17 @@ int64_t networkfs_http_call(const char *token, const char *method,
     kfree(raw_response_buffer);
     return error;
 }
+
+void encode(const char *src, char *dst) {
+    while (*src != '\0') {
+        if ((*src >= '0' && *src <= '9') || (*src >= 'a' && *src <= 'z') || (*src >= 'A' && *src <= 'Z')) {
+            *dst = *src;
+            dst++;
+        } else {
+            sprintf(dst, "%%%02X", (unsigned char)*src);
+            dst += 3;
+        }
+        src++;
+    }
+    *dst = '\0';
+}
