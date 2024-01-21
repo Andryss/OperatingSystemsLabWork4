@@ -27,10 +27,14 @@ struct file_system_type networkfs_fs_type =
 
 
 int networkfs_iterate(struct file *, struct dir_context *);
+ssize_t networkfs_read(struct file *, char *, size_t, loff_t *);
+ssize_t networkfs_write(struct file *, const char *, size_t, loff_t *);
 
 struct file_operations networkfs_dir_ops =
         {
-                .iterate = networkfs_iterate
+                .iterate = networkfs_iterate,
+                .read = networkfs_read,
+                .write = networkfs_write
         };
 
 
@@ -70,6 +74,14 @@ struct __attribute__((__packed__)) create_response {
 };
 
 struct __attribute__((__packed__)) remove_response {
+};
+
+struct __attribute__((__packed__)) read_response {
+    uint32_t size;
+    char content[1024];
+};
+
+struct __attribute__((__packed__)) write_response {
 };
 
 #endif //NETWORK_FILE_SYSTEM_ENTRYPOINT_H

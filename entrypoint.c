@@ -225,5 +225,84 @@ int networkgs_rmdir(struct inode *parent_inode, struct dentry *child_dentry) {
     return networkfs_remove_object(parent_inode, child_dentry, DT_DIR);
 }
 
+ssize_t networkfs_read(struct file *filp, char *buffer, size_t len, loff_t *offset) {
+    struct dentry *dentry;
+    struct inode *inode;
+    ino_t ino;
+    dentry = filp->f_path.dentry;
+    inode = dentry->d_inode;
+    ino = inode->i_ino;
+
+    printk(KERN_INFO "Read %lu offset %llu\n", ino, *offset);
+
+    struct read_response response;
+    int64_t code;
+    char inode_str[11];
+    snprintf(inode_str, sizeof(inode_str), "%lu", ino);
+    if ((code = networkfs_http_call(token, "read", (void *)&response, sizeof(response),
+                                    1, "inode", inode_str)) != 0) {
+        printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
+        return -1;
+    }
+
+    if (*offset >= response.size) {
+        return 0;
+    }
+
+    printk(KERN_INFO "Read content with size %d\n", response.size);
+
+    size_t rest = min(len, (size_t) (response.size - *offset));
+
+    int uncopied = copy_to_user(buffer, response.content, rest);
+    if (uncopied != 0) {
+        printk(KERN_INFO "copy_to_user return %d when size was %lu\n", uncopied, rest);
+    }
+
+    *offset += rest - uncopied;
+    return (rest - uncopied);
+}
+
+ssize_t networkfs_write(struct file *filp, const char *buffer, size_t len, loff_t *offset) {
+    struct dentry *dentry;
+    struct inode *inode;
+    ino_t ino;
+    dentry = filp->f_path.dentry;
+    inode = dentry->d_inode;
+    ino = inode->i_ino;
+
+    printk(KERN_INFO "Write %lu offset %llu\n", ino, *offset);
+
+    if (*offset >= 1024) {
+        return 0;
+    }
+    len = min(len, (size_t) 1023);
+
+    char content[1024];
+    int uncopied;
+    uncopied = copy_from_user(content, buffer, len);
+    if (uncopied != 0) {
+        printk(KERN_INFO "copy_to_user return %d when size was %lu\n", uncopied, len);
+        return 0;
+    }
+    content[len] = '\0';
+
+    struct write_response response;
+    int64_t code;
+    char inode_str[11];
+    snprintf(inode_str, sizeof(inode_str), "%lu", ino);
+    char content_enc[1023 * 3 + 1];
+    encode(content, content_enc);
+    if ((code = networkfs_http_call(token, "write", (void *)&response, sizeof(response),
+                                    2, "inode", inode_str, "content", content_enc)) != 0) {
+        printk(KERN_INFO "networkfs_http_call error code %lld\n", code);
+        return -1;
+    }
+
+    printk(KERN_INFO "Wrote\n");
+
+    *offset += len;
+    return len;
+}
+
 module_init(networkfs_init);
 module_exit(networkfs_exit);
